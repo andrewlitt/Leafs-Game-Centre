@@ -1,0 +1,6 @@
+env
+*.DS_Store
+*.pyc
+__pycache__
+Procfile.windows
+db.sqlite3

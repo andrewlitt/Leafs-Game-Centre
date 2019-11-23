@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="gameContainer">
+  <a class="link" href="{% url 'home' %}">
+    Home
+  </a>
+  <h1>{{game.date_time.date}}</h1>
+  <div class="gameHeader">
+    <img src="https://www-league.nhlstatic.com/images/logos/teams-current-primary-light/{{game.away_team_id}}.svg"/>
+    <p> at </p>
+    <img src="https://www-league.nhlstatic.com/images/logos/teams-current-primary-light/{{game.home_team_id}}.svg"/>
+  </div>
+  <h1 >{{ away_stats.0.goals }}    -    {{ home_stats.0.goals }}</h1>
+  {% load static %}
+  <canvas id="gameChart" class="chart" style="background-image: url('{% static 'rink.png' %}')"> ></canvas>
+  <div class="zoneLabels">
+    <h2 style="float:left;">Defensive Zone</h1>
+    <h2 style="float:right;">Offensive Zone</h1>
+  </div>
+  <div class="zoneLabels">
+    <div class = "teamLogos" style="float:left;">
+      <img  src="https://www-league.nhlstatic.com/images/logos/teams-current-primary-light/10.svg"/>
+      {% if isHome %}
+      <h1>{{ home_stats.0.goals }}</h1>
+      {% else %}
+      <h1>{{ away_stats.0.goals }}</h1>
+      {% endif %}
+    </div>
+    <div class = "teamLogos" style="float:right;">
+      {% if isHome %}
+      <h1>{{ away_stats.0.goals }}</h1>
+      <img src="https://www-league.nhlstatic.com/images/logos/teams-current-primary-light/{{game.away_team_id}}.svg"/>
+      {% else %}
+      <h1>{{ home_stats.0.goals }}</h1>
+      <img src="https://www-league.nhlstatic.com/images/logos/teams-current-primary-light/{{game.home_team_id}}.svg"/>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="tables">
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>TOI</th>
+          <th>Shots</th>
+          <th>Goals</th>
+          <th>Assists</th>
+          <th>Block</th>
+          <th>Takeaways</th>
+          <th>Giveaways</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for player in players %}
+        {% if player.team_id == 10 %}
+        <tr>
+          <td>{{player.firstName}} {{player.lastName}}</td>
+          <td>{{player.timeOnIce}}</td>
+          <td>{{player.shots}}</td>
+          <td>{{player.goals}}</td>
+          <td>{{player.assists}}</td>
+          <td>{{player.blocked}}</td>
+          <td>{{player.takeaways}}</td>
+          <td>{{player.giveaways}}</td>
+        </tr>
+        {% endif %}
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <table style="float:right;">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>TOI</th>
+          <th>Shots</th>
+          <th>Goals</th>
+          <th>Assists</th>
+          <th>Block</th>
+          <th>Takeaways</th>
+          <th>Giveaways</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for player in players %}
+          {% if player.team_id != 10 %}
+          <tr>
+            <td>{{player.firstName}} {{player.lastName}}</td>
+            <td>{{player.timeOnIce}}</td>
+            <td>{{player.shots}}</td>
+            <td>{{player.goals}}</td>
+            <td>{{player.assists}}</td>
+            <td>{{player.blocked}}</td>
+            <td>{{player.takeaways}}</td>
+            <td>{{player.giveaways}}</td>
+          </tr>
+          {% endif %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="buttons">
+    {% if game.id > 0 %}
+    <a class="link" href="/game/{{game.id|add:-1}}">
+      Last Game
+    </a>
+    {% endif %}
+    {% if game.id < 81 %}
+    <a class="link" href="/game/{{game.id|add:1}}">
+      Next Game
+    </a>
+    {% endif %}
+  </div>
+</div>
+<script type="text/javascript">
+
+    var home = '{{isHome}}';
+     var datasetBias = [
+       0,
+       {{goals|length|safe}},
+       {{goals|length|safe}}+{{shots|length|safe}},
+       {{goals|length|safe}}+{{shots|length|safe}}+{{blocked_shots|length|safe}},
+       {{goals|length|safe}}+{{shots|length|safe}}+{{blocked_shots|length|safe}}+{{missed_shots|length|safe}},
+       {{goals|length|safe}}+{{shots|length|safe}}+{{blocked_shots|length|safe}}+{{missed_shots|length|safe}}+{{hits_given|length|safe}}
+     ];
+
+     var gamedata = {
+       labels: {{play_descriptions|safe}},
+       datasets:[
+         {
+           label: 'Goals',
+           data: [ {% for goal in goals %}
+             {
+               x: {{goal.st_x}},
+               y: {{goal.st_y}}
+             },
+             {% endfor %}
+             ],
+             backgroundColor:'red',
+             borderColor:'black'
+           },{
+           label: 'Shots',
+             data: [ {% for shot in shots %}
+             {
+               x: {{shot.st_x}},
+               y: {{shot.st_y}}
+             },
+             {% endfor %}
+             ],
+             backgroundColor:'blue',
+             borderColor:''
+           },{
+           label: 'Blocked Shots',
+           data: [ {% for blocked_shot in blocked_shots %}
+             {
+               x: {{blocked_shot.st_x}},
+               y: {{blocked_shot.st_y}}
+             }, {% endfor %}
+             ],
+             backgroundColor:'lightgrey'
+           },{
+           label: 'Missed Shots',
+           data: [ {% for missed_shot in missed_shots %}
+             {
+               x: {{missed_shot.st_x}},
+               y: {{missed_shot.st_y}}
+             }, {% endfor %}
+             ],
+             backgroundColor:'black'
+           },{
+           label: 'Hits Given',
+           data: [ {% for hit_gave in hits_given %}
+             {
+               x: {{hit_gave.st_x}},
+               y: {{hit_gave.st_y}}
+             }, {% endfor %}
+             ],
+             backgroundColor:'green',
+             borderColor:''
+           },
+           {
+           label: 'Hits Taken',
+           data: [ {% for hit in hits_taken %}
+             {
+               x: {{hit.st_x}},
+               y: {{hit.st_y}}
+             },
+             {% endfor %}
+             ],
+             backgroundColor:'lightgreen',
+             borderColor:''
+           }
+       ],
+     };
+     if(home=='False'){
+       gamedata.datasets.forEach(dataset =>
+         dataset.data.forEach(function(data){
+           data.x = -1*data.x;
+           data.y = -1*data.y;
+         })
+       );
+     }
+     var ctx = document.getElementById('gameChart').getContext('2d');
+     var scatterChart = new Chart(ctx,{
+      type: 'scatter',
+      data: gamedata,
+      options: {
+          responsive: false,
+          aspectRatio: 2.35,
+          scales: {
+              xAxes: [{
+                  type: 'linear',
+                  ticks: {
+                    display: false,
+                    min:-100,
+                    max: 100
+                  },
+                  gridLines: {
+                    display: false,
+                    color: "rgba(0, 0, 0, 0)"
+                  }
+              }],
+              yAxes: [{
+                  type: 'linear',
+                  ticks: {
+                    display: false,
+                    min:-40,
+                    max: 40
+                  },
+                  gridLines: {
+                    display: false,
+                    color: "rgba(0, 0, 0, 0)"
+                  }
+              }]
+          },
+          tooltips: {
+            callbacks: {
+
+                title: function(tooltipItem,data) {
+                },
+                footer: function(tooltipItem,data) {
+                  var idx = datasetBias[tooltipItem[0].datasetIndex] + tooltipItem[0].index
+                  var label = data.labels[idx];
+                  console.log(tooltipItem)
+                  console.log(label)
+                  return label
+                  //desc = {{play_descriptions|safe}}
+                  //console.log(tooltipItem[0].index)
+                  //return desc[tooltipItem[0].index]
+                },
+                label: function(tooltipItem, data) {
+                    return ''
+                }
+            }
+            }
+}});
+</script>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="text-align:center;" class="start">
+  <h2>About</h2>
+  <p>A look at the Leafs 2018-2019 season. Developed by Andrew Litt using Django! Stats scraped from the NHL API.</p>
+  <h1>2018-2019 Season</h1>
+</div>
+
+<div class="gameList">
+  {% for game in games %}
+  <a class="gameLink" href="/game/{{game.id}}">
+    <div class="gameItem">
+        <h3>Game {{game.id|add:"1"}} - {{game.date_time.date}}</h3>
+        <div class="gamePics">
+          <img src="https://www-league.nhlstatic.com/images/logos/teams-current-primary-light/{{game.away_team_id}}.svg"/> at <img src="https://www-league.nhlstatic.com/images/logos/teams-current-primary-light/{{game.home_team_id}}.svg"/></li>
+        </div>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% endblock %}
